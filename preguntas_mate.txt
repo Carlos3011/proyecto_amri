@@ -1,0 +1,59 @@
+¿Cuánto es 5 + 3?
+A) 6
+B) 8
+C) 9
+RESPUESTA:B
+
+¿Cuál es el resultado de 15 x 4?
+A) 45
+B) 50
+C) 60
+RESPUESTA:C
+
+¿Cuánto es 100 ÷ 5?
+A) 20
+B) 25
+C) 15
+RESPUESTA:A
+
+¿Cuál es el área de un cuadrado de lado 6?
+A) 24
+B) 36
+C) 12
+RESPUESTA:B
+
+¿Cuánto es 7 x 8?
+A) 54
+B) 56
+C) 58
+RESPUESTA:B
+
+¿Cuál es la raíz cuadrada de 81?
+A) 8
+B) 9
+C) 10
+RESPUESTA:B
+
+¿Cuánto es 45 - 17?
+A) 28
+B) 27
+C) 26
+RESPUESTA:A
+
+¿Cuál es el perímetro de un triángulo equilátero de lado 5?
+A) 10
+B) 15
+C) 20
+RESPUESTA:B
+
+¿Cuánto es 12 + 15 + 18?
+A) 45
+B) 43
+C) 47
+RESPUESTA:A
+
+¿Cuál es el 20% de 200?
+A) 20
+B) 40
+C) 50
+RESPUESTA:B

@@ -1,0 +1,59 @@
+Si todos los A son B, y todos los B son C, entonces:
+A) Algunos A son C
+B) Todos los A son C
+C) Ningún A es C
+RESPUESTA:B
+
+En una fila, Juan está antes que Pedro y después que María. ¿Quién está primero?
+A) Juan
+B) Pedro
+C) María
+RESPUESTA:C
+
+Si 5 máquinas hacen 5 artículos en 5 minutos, ¿cuánto tardan 100 máquinas en hacer 100 artículos?
+A) 100 minutos
+B) 5 minutos
+C) 50 minutos
+RESPUESTA:B
+
+Continúa la serie: 2, 4, 8, 16, ...
+A) 32
+B) 24
+C) 30
+RESPUESTA:A
+
+Si no es verdad que "todos los pájaros vuelan", entonces:
+A) Ningún pájaro vuela
+B) Algunos pájaros no vuelan
+C) Algunos pájaros vuelan
+RESPUESTA:B
+
+Si A > B y B > C, entonces:
+A) C puede ser igual a A
+B) A es mayor que C
+C) C es mayor que A
+RESPUESTA:B
+
+¿Qué número sigue? 1, 4, 9, 16, 25, ...
+A) 36
+B) 30
+C) 49
+RESPUESTA:A
+
+Si no es falso que no llueve, entonces:
+A) No llueve
+B) Llueve
+C) Puede llover
+RESPUESTA:B
+
+Todos los gatos son mamíferos. Algunos mamíferos son negros. Por lo tanto:
+A) Todos los gatos son negros
+B) Ningún gato es negro
+C) No se puede concluir
+RESPUESTA:C
+
+Si hoy es martes, dentro de 100 días será:
+A) Martes
+B) Miércoles
+C) Jueves
+RESPUESTA:C
