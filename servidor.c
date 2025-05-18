@@ -7,6 +7,9 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 
+// Prototipos de funciones
+void guardar_kardex(const char* matricula, ResultadoAcademico* resultado_academico, ResultadoPsicometrico* resultado_psicometrico);
+
 #define PORT 8080
 #define MAX_BUFFER 1024
 #define MAX_PREGUNTAS 10
