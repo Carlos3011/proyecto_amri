@@ -1,0 +1,66 @@
+Complete la secuencia: 2, 4, 6, 8, ?
+A) 9
+B) 10
+C) 12
+RESPUESTA:B
+
+¿Cuántos triángulos hay en la siguiente figura?
+   /\
+  /  \
+ /____\
+A) 1
+B) 2
+C) 3
+RESPUESTA:C
+
+Si Juan tiene el doble de la edad de Pedro, y Pedro tiene 15 años, ¿cuántos años tiene Juan?
+A) 25
+B) 30
+C) 35
+RESPUESTA:B
+
+Complete la secuencia: 1, 3, 6, 10, ?
+A) 15
+B) 16
+C) 18
+RESPUESTA:A
+
+¿Cuántos cuadrados hay en la siguiente figura?
+□□
+□□
+A) 4
+B) 5
+C) 6
+RESPUESTA:B
+
+Si un tren viaja a 60 km/h, ¿cuánto tiempo tardará en recorrer 180 km?
+A) 2 horas
+B) 3 horas
+C) 4 horas
+RESPUESTA:B
+
+Complete la secuencia: 3, 6, 12, 24, ?
+A) 36
+B) 48
+C) 42
+RESPUESTA:B
+
+¿Cuántos rectángulos hay en la siguiente figura?
+┌─┐
+└─┘
+A) 1
+B) 2
+C) 3
+RESPUESTA:B
+
+Si A = B y B = C, entonces:
+A) A = C
+B) A ≠ C
+C) No se puede determinar
+RESPUESTA:A
+
+Complete la secuencia: 1, 4, 9, 16, ?
+A) 20
+B) 25
+C) 30
+RESPUESTA:B

@@ -9,6 +9,7 @@
 
 #define PORT 8080
 #define MAX_BUFFER 1024
+#define MAX_PREGUNTAS 10
 
 // Estructura para almacenar datos del usuario
 typedef struct {
@@ -21,32 +22,286 @@ typedef struct {
     char password[50];
 } Usuario;
 
+// Estructura para preguntas
+typedef struct {
+    char pregunta[256];
+    char opciones[3][64];
+    char respuesta;
+} Pregunta;
+
+// Estructura para resultados del examen académico
+typedef struct {
+    int matematicas;
+    int espanol;
+    int ingles;
+    float promedio;
+} ResultadoAcademico;
+
+// Estructura para resultados del test psicométrico
+typedef struct {
+    int correctas;
+    int total;
+    float porcentaje;
+    char fecha[20];
+} ResultadoPsicometrico;
+
+// Estructura para el kardex completo
+typedef struct {
+    char matricula[20];
+    ResultadoAcademico resultados_academicos;
+    ResultadoPsicometrico resultados_psicometricos;
+} Kardex;
+
+// Función para cargar preguntas desde archivo
+int cargar_preguntas(const char* archivo, Pregunta* preguntas) {
+    FILE* f = fopen(archivo, "r");
+    if (!f) return 0;
+    
+    int count = 0;
+    char linea[512];
+    
+    while (count < MAX_PREGUNTAS && fgets(linea, sizeof(linea), f)) {
+        if (strlen(linea) <= 1) continue;
+        strcpy(preguntas[count].pregunta, linea);
+        
+        // Leer opciones
+        for (int i = 0; i < 3; i++) {
+            if (!fgets(linea, sizeof(linea), f)) break;
+            if (strlen(linea) > 2) {
+                strcpy(preguntas[count].opciones[i], linea + 3);
+                preguntas[count].opciones[i][strlen(preguntas[count].opciones[i])-1] = '\0';
+            }
+        }
+        
+        // Leer respuesta
+        if (fgets(linea, sizeof(linea), f)) {
+            if (strncmp(linea, "RESPUESTA:", 10) == 0) {
+                preguntas[count].respuesta = linea[10];
+                count++;
+            }
+        }
+    }
+    
+    fclose(f);
+    return count;
+}
+
 // Función para manejar la conexión con el cliente
+void enviar_examen_academico(int sock, const char* matricula) {
+    Pregunta preguntas_mate[MAX_PREGUNTAS];
+    Pregunta preguntas_espanol[MAX_PREGUNTAS];
+    Pregunta preguntas_ingles[MAX_PREGUNTAS];
+    
+    int num_mate = cargar_preguntas("preguntas_mate.txt", preguntas_mate);
+    int num_espanol = cargar_preguntas("preguntas_espanol.txt", preguntas_espanol);
+    int num_ingles = cargar_preguntas("preguntas_ingles.txt", preguntas_ingles);
+    
+    ResultadoAcademico resultado = {0, 0, 0, 0.0};
+    
+    // Enviar número total de preguntas por materia
+    send(sock, &num_mate, sizeof(int), 0);
+    send(sock, &num_espanol, sizeof(int), 0);
+    send(sock, &num_ingles, sizeof(int), 0);
+    
+    // Enviar y procesar preguntas de matemáticas
+    for (int i = 0; i < num_mate; i++) {
+        send(sock, &preguntas_mate[i], sizeof(Pregunta), 0);
+        char respuesta_usuario;
+        recv(sock, &respuesta_usuario, 1, 0);
+        if (respuesta_usuario == preguntas_mate[i].respuesta) {
+            resultado.matematicas++;
+        }
+    }
+    
+    // Enviar y procesar preguntas de español
+    for (int i = 0; i < num_espanol; i++) {
+        send(sock, &preguntas_espanol[i], sizeof(Pregunta), 0);
+        char respuesta_usuario;
+        recv(sock, &respuesta_usuario, 1, 0);
+        if (respuesta_usuario == preguntas_espanol[i].respuesta) {
+            resultado.espanol++;
+        }
+    }
+    
+    // Enviar y procesar preguntas de inglés
+    for (int i = 0; i < num_ingles; i++) {
+        send(sock, &preguntas_ingles[i], sizeof(Pregunta), 0);
+        char respuesta_usuario;
+        recv(sock, &respuesta_usuario, 1, 0);
+        if (respuesta_usuario == preguntas_ingles[i].respuesta) {
+            resultado.ingles++;
+        }
+    }
+    
+    // Calcular promedio
+    resultado.promedio = (float)(resultado.matematicas + resultado.espanol + resultado.ingles) / 3.0;
+    
+    // Guardar resultado en el kardex
+    ResultadoPsicometrico resultado_psico = {0}; // Resultado vacío para el kardex
+    guardar_kardex(matricula, &resultado, &resultado_psico);
+    
+    // Enviar resultados al cliente
+    send(sock, &resultado, sizeof(ResultadoAcademico), 0);
+}
+
+void guardar_kardex(const char* matricula, ResultadoAcademico* resultado_academico, ResultadoPsicometrico* resultado_psicometrico) {
+    FILE* f = fopen("kardex.txt", "a");
+    if (f != NULL) {
+        fprintf(f, "%s,%d,%d,%d,%.2f,%d,%d,%.2f,%s\n",
+                matricula,
+                resultado_academico->matematicas,
+                resultado_academico->espanol,
+                resultado_academico->ingles,
+                resultado_academico->promedio,
+                resultado_psicometrico->correctas,
+                resultado_psicometrico->total,
+                resultado_psicometrico->porcentaje,
+                resultado_psicometrico->fecha);
+        fclose(f);
+    }
+}
+
+void enviar_kardex(int sock, const char* matricula) {
+    FILE* f = fopen("kardex.txt", "r");
+    if (f == NULL) {
+        char* mensaje = "No hay registros disponibles";
+        send(sock, mensaje, strlen(mensaje), 0);
+        return;
+    }
+
+    char linea[512];
+    char mat_temp[20];
+    Kardex kardex;
+    int encontrado = 0;
+
+    while (fgets(linea, sizeof(linea), f)) {
+        sscanf(linea, "%[^,],%d,%d,%d,%f,%d,%d,%f,%s",
+               mat_temp,
+               &kardex.resultados_academicos.matematicas,
+               &kardex.resultados_academicos.espanol,
+               &kardex.resultados_academicos.ingles,
+               &kardex.resultados_academicos.promedio,
+               &kardex.resultados_psicometricos.correctas,
+               &kardex.resultados_psicometricos.total,
+               &kardex.resultados_psicometricos.porcentaje,
+               kardex.resultados_psicometricos.fecha);
+
+        if (strcmp(mat_temp, matricula) == 0) {
+            encontrado = 1;
+            strcpy(kardex.matricula, matricula);
+            send(sock, &kardex, sizeof(Kardex), 0);
+            break;
+        }
+    }
+
+    if (!encontrado) {
+        char* mensaje = "No se encontraron registros para esta matrícula";
+        send(sock, mensaje, strlen(mensaje), 0);
+    }
+
+    fclose(f);
+}
+
+void enviar_test_psicometrico(int sock) {
+    Pregunta preguntas_visual[MAX_PREGUNTAS];
+    Pregunta preguntas_razon[MAX_PREGUNTAS];
+    int num_visual = cargar_preguntas("preguntas_visual.txt", preguntas_visual);
+    int num_razon = cargar_preguntas("preguntas_razonamiento.txt", preguntas_razon);
+    
+    // Enviar número total de preguntas
+    int total = num_visual + num_razon;
+    send(sock, &total, sizeof(int), 0);
+    
+    int correctas = 0;
+    
+    // Enviar preguntas visuales
+    for (int i = 0; i < num_visual; i++) {
+        send(sock, &preguntas_visual[i], sizeof(Pregunta), 0);
+        char respuesta_usuario;
+        recv(sock, &respuesta_usuario, 1, 0);
+        
+        // Enviar si es correcta
+        char es_correcta = (respuesta_usuario == preguntas_visual[i].respuesta);
+        if (es_correcta) correctas++;
+        send(sock, &es_correcta, 1, 0);
+    }
+    
+    // Enviar preguntas de razonamiento
+    for (int i = 0; i < num_razon; i++) {
+        send(sock, &preguntas_razon[i], sizeof(Pregunta), 0);
+        char respuesta_usuario;
+        recv(sock, &respuesta_usuario, 1, 0);
+        
+        // Enviar si es correcta
+        char es_correcta = (respuesta_usuario == preguntas_razon[i].respuesta);
+        if (es_correcta) correctas++;
+        send(sock, &es_correcta, 1, 0);
+    }
+    
+    // Guardar resultados
+    ResultadoPsicometrico resultado = {
+        correctas,
+        total,
+        (float)correctas / total * 100,
+        "" // La fecha se establecerá en el cliente
+    };
+    
+    // Enviar resultado completo al cliente
+    send(sock, &resultado, sizeof(ResultadoPsicometrico), 0);
+}
+
 void *manejar_cliente(void *socket_desc) {
     int sock = *(int*)socket_desc;
     char buffer[MAX_BUFFER] = {0};
-    Usuario usuario;
+    int opcion;
+    char matricula[20] = {0};
     
-    // Recibir datos del usuario
-    recv(sock, &usuario, sizeof(Usuario), 0);
+    // Recibir opción del menú
+    recv(sock, &opcion, sizeof(int), 0);
     
-    // Guardar en archivo
-    FILE *f = fopen("registros.txt", "a");
-    if (f != NULL) {
-        fprintf(f, "%s,%s,%s,%d,%c,%d,%s\n", 
-                usuario.nombre, 
-                usuario.matricula,
-                usuario.carrera,
-                usuario.edad,
-                usuario.genero,
-                usuario.semestre,
-                usuario.password);
-        fclose(f);
+    switch(opcion) {
+        case 1: {
+            Usuario usuario;
+            recv(sock, &usuario, sizeof(Usuario), 0);
+            
+            // Guardar en archivo
+            FILE *f = fopen("registros.txt", "a");
+            if (f != NULL) {
+                fprintf(f, "%s,%s,%s,%d,%c,%d,%s\n", 
+                        usuario.nombre, 
+                        usuario.matricula,
+                        usuario.carrera,
+                        usuario.edad,
+                        usuario.genero,
+                        usuario.semestre,
+                        usuario.password);
+                fclose(f);
+            }
+            
+            // Enviar confirmación
+            char *mensaje = "Registro exitoso";
+            send(sock, mensaje, strlen(mensaje), 0);
+            break;
+        }
+        case 2: {
+            // Recibir matrícula
+            recv(sock, matricula, sizeof(matricula), 0);
+            enviar_test_psicometrico(sock);
+            break;
+        }
+        case 3: {
+            // Recibir matrícula
+            recv(sock, matricula, sizeof(matricula), 0);
+            enviar_examen_academico(sock, matricula);
+            break;
+        }
+        case 4: {
+            // Recibir matrícula
+            recv(sock, matricula, sizeof(matricula), 0);
+            enviar_kardex(sock, matricula);
+            break;
+        }
     }
-    
-    // Enviar confirmación
-    char *mensaje = "Registro exitoso";
-    send(sock, mensaje, strlen(mensaje), 0);
     
     free(socket_desc);
     close(sock);
