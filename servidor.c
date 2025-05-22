@@ -6,6 +6,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <pthread.h>
+#include <ctype.h>
 
 #define PORT 8080
 #define MAX_BUFFER 1024
@@ -81,6 +82,9 @@ int cargar_preguntas(const char* archivo, Pregunta* preguntas) {
             linea[len-1] = '\0';
         }
         
+        // Verificar si la pregunta está vacía
+        if (strlen(linea) == 0) continue;
+        
         // Copiar pregunta
         strncpy(preguntas[count].pregunta, linea, sizeof(preguntas[count].pregunta) - 1);
         preguntas[count].pregunta[sizeof(preguntas[count].pregunta) - 1] = '\0';
@@ -99,6 +103,9 @@ int cargar_preguntas(const char* archivo, Pregunta* preguntas) {
                     linea[len-1] = '\0';
                 }
                 
+                // Verificar si la opción está vacía
+                if (strlen(linea + 3) == 0) break;
+                
                 // Copiar opción sin el prefijo "X) "
                 strncpy(preguntas[count].opciones[i], linea + 3, sizeof(preguntas[count].opciones[i]) - 1);
                 preguntas[count].opciones[i][sizeof(preguntas[count].opciones[i]) - 1] = '\0';
@@ -106,8 +113,11 @@ int cargar_preguntas(const char* archivo, Pregunta* preguntas) {
             }
         }
         
-        // Verificar que se leyeron todas las opciones
-        if (opciones_validas != 3) continue;
+        // Verificar que se leyeron todas las opciones y que ninguna está vacía
+        if (opciones_validas != 3) {
+            printf("Error: Opciones incompletas o inválidas en la pregunta %d\n", count + 1);
+            continue;
+        }
         
         // Leer respuesta
         resultado = fgets(linea, sizeof(linea), f);
@@ -117,6 +127,8 @@ int cargar_preguntas(const char* archivo, Pregunta* preguntas) {
             preguntas[count].respuesta = toupper(linea[10]);
             if (preguntas[count].respuesta >= 'A' && preguntas[count].respuesta <= 'C') {
                 count++;
+            } else {
+                printf("Error: Respuesta inválida en la pregunta %d\n", count + 1);
             }
         }
     }
@@ -124,6 +136,8 @@ int cargar_preguntas(const char* archivo, Pregunta* preguntas) {
     fclose(f);
     if (count == 0) {
         printf("No se pudieron cargar preguntas del archivo: %s\n", archivo);
+    } else {
+        printf("Se cargaron %d preguntas del archivo: %s\n", count, archivo);
     }
     return count;
 }
@@ -149,9 +163,15 @@ void enviar_examen_academico(int sock, const char* matricula) {
     for (int i = 0; i < num_mate; i++) {
         send(sock, &preguntas_mate[i], sizeof(Pregunta), 0);
         char respuesta_usuario;
-        recv(sock, &respuesta_usuario, 1, 0);
-        if (respuesta_usuario == preguntas_mate[i].respuesta) {
-            resultado.matematicas++;
+        if (recv(sock, &respuesta_usuario, 1, 0) <= 0) {
+            printf("Error al recibir respuesta de matemáticas\n");
+            return;
+        }
+        char es_correcta = (respuesta_usuario == preguntas_mate[i].respuesta);
+        if (es_correcta) resultado.matematicas++;
+        if (send(sock, &es_correcta, 1, 0) <= 0) {
+            printf("Error al enviar resultado de matemáticas\n");
+            return;
         }
     }
     
@@ -159,9 +179,15 @@ void enviar_examen_academico(int sock, const char* matricula) {
     for (int i = 0; i < num_espanol; i++) {
         send(sock, &preguntas_espanol[i], sizeof(Pregunta), 0);
         char respuesta_usuario;
-        recv(sock, &respuesta_usuario, 1, 0);
-        if (respuesta_usuario == preguntas_espanol[i].respuesta) {
-            resultado.espanol++;
+        if (recv(sock, &respuesta_usuario, 1, 0) <= 0) {
+            printf("Error al recibir respuesta de español\n");
+            return;
+        }
+        char es_correcta = (respuesta_usuario == preguntas_espanol[i].respuesta);
+        if (es_correcta) resultado.espanol++;
+        if (send(sock, &es_correcta, 1, 0) <= 0) {
+            printf("Error al enviar resultado de español\n");
+            return;
         }
     }
     
@@ -169,9 +195,15 @@ void enviar_examen_academico(int sock, const char* matricula) {
     for (int i = 0; i < num_ingles; i++) {
         send(sock, &preguntas_ingles[i], sizeof(Pregunta), 0);
         char respuesta_usuario;
-        recv(sock, &respuesta_usuario, 1, 0);
-        if (respuesta_usuario == preguntas_ingles[i].respuesta) {
-            resultado.ingles++;
+        if (recv(sock, &respuesta_usuario, 1, 0) <= 0) {
+            printf("Error al recibir respuesta de inglés\n");
+            return;
+        }
+        char es_correcta = (respuesta_usuario == preguntas_ingles[i].respuesta);
+        if (es_correcta) resultado.ingles++;
+        if (send(sock, &es_correcta, 1, 0) <= 0) {
+            printf("Error al enviar resultado de inglés\n");
+            return;
         }
     }
     
@@ -183,7 +215,10 @@ void enviar_examen_academico(int sock, const char* matricula) {
     guardar_kardex(matricula, &resultado, &resultado_psico);
     
     // Enviar resultados al cliente
-    send(sock, &resultado, sizeof(ResultadoAcademico), 0);
+    if (send(sock, &resultado, sizeof(ResultadoAcademico), 0) <= 0) {
+        printf("Error al enviar resultados finales\n");
+        return;
+    }
 }
 
 void guardar_kardex(const char* matricula, ResultadoAcademico* resultado_academico, ResultadoPsicometrico* resultado_psicometrico) {
@@ -214,10 +249,11 @@ void enviar_kardex(int sock, const char* matricula) {
     char linea[512];
     char mat_temp[20];
     Kardex kardex;
+    memset(&kardex, 0, sizeof(Kardex));
     int encontrado = 0;
 
     while (fgets(linea, sizeof(linea), f)) {
-        sscanf(linea, "%[^,],%d,%d,%d,%f,%d,%d,%f,%s",
+        if (sscanf(linea, "%[^,],%d,%d,%d,%f,%d,%d,%f,%s",
                mat_temp,
                &kardex.resultados_academicos.matematicas,
                &kardex.resultados_academicos.espanol,
@@ -226,17 +262,27 @@ void enviar_kardex(int sock, const char* matricula) {
                &kardex.resultados_psicometricos.correctas,
                &kardex.resultados_psicometricos.total,
                &kardex.resultados_psicometricos.porcentaje,
-               kardex.resultados_psicometricos.fecha);
+               kardex.resultados_psicometricos.fecha) == 9) {
 
-        if (strcmp(mat_temp, matricula) == 0) {
-            encontrado = 1;
-            strcpy(kardex.matricula, matricula);
-            send(sock, &kardex, sizeof(Kardex), 0);
-            break;
+            if (strcmp(mat_temp, matricula) == 0) {
+                encontrado = 1;
+                strncpy(kardex.matricula, matricula, sizeof(kardex.matricula) - 1);
+                kardex.matricula[sizeof(kardex.matricula) - 1] = '\0';
+                
+                // Enviar un indicador de éxito
+                char status = 1;
+                send(sock, &status, sizeof(char), 0);
+                // Enviar el kardex
+                send(sock, &kardex, sizeof(Kardex), 0);
+                break;
+            }
         }
     }
 
     if (!encontrado) {
+        // Enviar un indicador de error
+        char status = 0;
+        send(sock, &status, sizeof(char), 0);
         char* mensaje = "No se encontraron registros para esta matrícula";
         send(sock, mensaje, strlen(mensaje), 0);
     }

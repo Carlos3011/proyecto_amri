@@ -58,13 +58,13 @@ void mostrar_kardex(int sock) {
     // Enviar matrícula al servidor
     send(sock, matricula, sizeof(matricula), 0);
     
-    // Recibir respuesta
-    char buffer[MAX_BUFFER];
-    Kardex kardex;
-    int bytes_recibidos = recv(sock, buffer, sizeof(buffer), MSG_PEEK);
+    // Recibir el estado de la respuesta
+    char status;
+    recv(sock, &status, sizeof(char), 0);
     
-    if (bytes_recibidos == sizeof(Kardex)) {
-        // Si recibimos un Kardex completo
+    if (status) {
+        // Si el estado es exitoso, recibir el kardex
+        Kardex kardex;
         recv(sock, &kardex, sizeof(Kardex), 0);
         
         printf("\n\033[1;34m=== RESULTADOS ACADÉMICOS ===\033[0m\n");
@@ -78,7 +78,8 @@ void mostrar_kardex(int sock) {
         printf("Porcentaje de aciertos: %.2f%%\n", kardex.resultados_psicometricos.porcentaje);
         printf("Fecha: %s\n", kardex.resultados_psicometricos.fecha);
     } else {
-        // Si recibimos un mensaje de error
+        // Si el estado indica error, recibir el mensaje de error
+        char buffer[MAX_BUFFER];
         recv(sock, buffer, MAX_BUFFER, 0);
         printf("\n\033[1;31m%s\033[0m\n", buffer);
     }
@@ -108,18 +109,33 @@ void mostrar_menu() {
 
 void realizar_examen_academico(int sock) {
     int num_mate, num_espanol, num_ingles;
-    recv(sock, &num_mate, sizeof(int), 0);
-    recv(sock, &num_espanol, sizeof(int), 0);
-    recv(sock, &num_ingles, sizeof(int), 0);
+    if (recv(sock, &num_mate, sizeof(int), 0) <= 0 ||
+        recv(sock, &num_espanol, sizeof(int), 0) <= 0 ||
+        recv(sock, &num_ingles, sizeof(int), 0) <= 0) {
+        printf("\033[1;31mError al recibir el número de preguntas\033[0m\n");
+        return;
+    }
+    
+    if (num_mate <= 0 || num_espanol <= 0 || num_ingles <= 0) {
+        printf("\033[1;31mError: No hay preguntas disponibles para el examen\033[0m\n");
+        return;
+    }
     
     Pregunta pregunta;
     ResultadoAcademico resultado;
+    int correctas_mate = 0, correctas_espanol = 0, correctas_ingles = 0;
     
     printf("\033[1;32m=== EXAMEN DE MATEMÁTICAS ===\033[0m\n\n");
     for (int i = 0; i < num_mate; i++) {
         memset(&pregunta, 0, sizeof(Pregunta));
         if (recv(sock, &pregunta, sizeof(Pregunta), 0) <= 0) {
             printf("\033[1;31mError al recibir la pregunta\033[0m\n");
+            return;
+        }
+        
+        // Verificar si la pregunta está vacía
+        if (strlen(pregunta.pregunta) == 0) {
+            printf("\033[1;31mError: Pregunta vacía recibida\033[0m\n");
             return;
         }
         
@@ -138,7 +154,23 @@ void realizar_examen_academico(int sock) {
             }
         } while (respuesta != 'A' && respuesta != 'B' && respuesta != 'C');
         
-        send(sock, &respuesta, 1, 0);
+        if (send(sock, &respuesta, 1, 0) <= 0) {
+            printf("\033[1;31mError al enviar respuesta\033[0m\n");
+            return;
+        }
+        
+        char es_correcta;
+        if (recv(sock, &es_correcta, 1, 0) <= 0) {
+            printf("\033[1;31mError al recibir resultado\033[0m\n");
+            return;
+        }
+        
+        if (es_correcta) {
+            printf("\033[1;32m¡Correcto!\033[0m\n");
+            correctas_mate++;
+        } else {
+            printf("\033[1;31mIncorrecto\033[0m\n");
+        }
     }
     
     printf("\n\033[1;32m=== EXAMEN DE ESPAÑOL ===\033[0m\n\n");
@@ -165,6 +197,15 @@ void realizar_examen_academico(int sock) {
         } while (respuesta != 'A' && respuesta != 'B' && respuesta != 'C');
         
         send(sock, &respuesta, 1, 0);
+        
+        char es_correcta;
+        recv(sock, &es_correcta, 1, 0);
+        if (es_correcta) {
+            printf("\033[1;32m¡Correcto!\033[0m\n");
+            correctas_espanol++;
+        } else {
+            printf("\033[1;31mIncorrecto\033[0m\n");
+        }
     }
     
     printf("\n\033[1;32m=== EXAMEN DE INGLÉS ===\033[0m\n\n");
@@ -191,6 +232,15 @@ void realizar_examen_academico(int sock) {
         } while (respuesta != 'A' && respuesta != 'B' && respuesta != 'C');
         
         send(sock, &respuesta, 1, 0);
+        
+        char es_correcta;
+        recv(sock, &es_correcta, 1, 0);
+        if (es_correcta) {
+            printf("\033[1;32m¡Correcto!\033[0m\n");
+            correctas_ingles++;
+        } else {
+            printf("\033[1;31mIncorrecto\033[0m\n");
+        }
     }
     
     // Recibir resultados
