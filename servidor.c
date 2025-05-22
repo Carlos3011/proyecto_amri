@@ -135,9 +135,15 @@ int cargar_preguntas(const char* archivo, Pregunta* preguntas) {
     
     fclose(f);
     if (count == 0) {
-        printf("No se pudieron cargar preguntas del archivo: %s\n", archivo);
+        printf("\033[1;31m┌─────────── ERROR DE CARGA ───────────┐\n");
+        printf("│ No se pudieron cargar preguntas del   │\n");
+        printf("│ archivo: %-28s │\n", archivo);
+        printf("└─────────────────────────────────────┘\033[0m\n");
     } else {
-        printf("Se cargaron %d preguntas del archivo: %s\n", count, archivo);
+        printf("\033[1;32m┌─────────── CARGA EXITOSA ───────────┐\n");
+        printf("│ Se cargaron \033[1;33m%d\033[1;32m preguntas del        │\n", count);
+        printf("│ archivo: %-28s │\n", archivo);
+        printf("└─────────────────────────────────────┘\033[0m\n");
     }
     return count;
 }
@@ -164,13 +170,17 @@ void enviar_examen_academico(int sock, const char* matricula) {
         send(sock, &preguntas_mate[i], sizeof(Pregunta), 0);
         char respuesta_usuario;
         if (recv(sock, &respuesta_usuario, 1, 0) <= 0) {
-            printf("Error al recibir respuesta de matemáticas\n");
+            printf("\033[1;31m┌─────────── ERROR DE COMUNICACIÓN ───────────┐\n");
+            printf("│ Error al recibir respuesta de matemáticas    │\n");
+            printf("└──────────────────────────────────────────────┘\033[0m\n");
             return;
         }
         char es_correcta = (respuesta_usuario == preguntas_mate[i].respuesta);
         if (es_correcta) resultado.matematicas++;
         if (send(sock, &es_correcta, 1, 0) <= 0) {
-            printf("Error al enviar resultado de matemáticas\n");
+            printf("\033[1;31m┌─────────── ERROR DE COMUNICACIÓN ───────────┐\n");
+            printf("│ Error al enviar resultado de matemáticas     │\n");
+            printf("└──────────────────────────────────────────────┘\033[0m\n");
             return;
         }
     }
@@ -180,13 +190,17 @@ void enviar_examen_academico(int sock, const char* matricula) {
         send(sock, &preguntas_espanol[i], sizeof(Pregunta), 0);
         char respuesta_usuario;
         if (recv(sock, &respuesta_usuario, 1, 0) <= 0) {
-            printf("Error al recibir respuesta de español\n");
+            printf("\033[1;31m┌─────────── ERROR DE COMUNICACIÓN ───────────┐\n");
+            printf("│ Error al recibir respuesta de español        │\n");
+            printf("└──────────────────────────────────────────────┘\033[0m\n");
             return;
         }
         char es_correcta = (respuesta_usuario == preguntas_espanol[i].respuesta);
         if (es_correcta) resultado.espanol++;
         if (send(sock, &es_correcta, 1, 0) <= 0) {
-            printf("Error al enviar resultado de español\n");
+            printf("\033[1;31m┌─────────── ERROR DE COMUNICACIÓN ───────────┐\n");
+            printf("│ Error al enviar resultado de español         │\n");
+            printf("└──────────────────────────────────────────────┘\033[0m\n");
             return;
         }
     }
@@ -196,13 +210,17 @@ void enviar_examen_academico(int sock, const char* matricula) {
         send(sock, &preguntas_ingles[i], sizeof(Pregunta), 0);
         char respuesta_usuario;
         if (recv(sock, &respuesta_usuario, 1, 0) <= 0) {
-            printf("Error al recibir respuesta de inglés\n");
+            printf("\033[1;31m┌─────────── ERROR DE COMUNICACIÓN ───────────┐\n");
+            printf("│ Error al recibir respuesta de inglés         │\n");
+            printf("└──────────────────────────────────────────────┘\033[0m\n");
             return;
         }
         char es_correcta = (respuesta_usuario == preguntas_ingles[i].respuesta);
         if (es_correcta) resultado.ingles++;
         if (send(sock, &es_correcta, 1, 0) <= 0) {
-            printf("Error al enviar resultado de inglés\n");
+            printf("\033[1;31m┌─────────── ERROR DE COMUNICACIÓN ───────────┐\n");
+            printf("│ Error al enviar resultado de inglés          │\n");
+            printf("└──────────────────────────────────────────────┘\033[0m\n");
             return;
         }
     }
@@ -216,7 +234,9 @@ void enviar_examen_academico(int sock, const char* matricula) {
     
     // Enviar resultados al cliente
     if (send(sock, &resultado, sizeof(ResultadoAcademico), 0) <= 0) {
-        printf("Error al enviar resultados finales\n");
+        printf("\033[1;31m┌─────────── ERROR DE COMUNICACIÓN ───────────┐\n");
+        printf("│ Error al enviar resultados finales          │\n");
+        printf("└──────────────────────────────────────────────┘\033[0m\n");
         return;
     }
 }
@@ -290,7 +310,7 @@ void enviar_kardex(int sock, const char* matricula) {
     fclose(f);
 }
 
-void enviar_test_psicometrico(int sock) {
+void enviar_test_psicometrico(int sock, const char* matricula) {
     Pregunta preguntas_visual[MAX_PREGUNTAS];
     Pregunta preguntas_razon[MAX_PREGUNTAS];
     int num_visual = cargar_preguntas("preguntas_visual.txt", preguntas_visual);
@@ -334,8 +354,52 @@ void enviar_test_psicometrico(int sock) {
         "" // La fecha se establecerá en el cliente
     };
     
+    // Guardar en el kardex
+    ResultadoAcademico resultado_academico = {0}; // Resultado académico vacío
+    guardar_kardex(matricula, &resultado_academico, &resultado);
+    
     // Enviar resultado completo al cliente
     send(sock, &resultado, sizeof(ResultadoPsicometrico), 0);
+}
+
+// Variables globales para el seguimiento de clientes
+static int clientes_activos = 0;
+
+void mostrar_banner_servidor() {
+    printf("\033[1;34m╔═══════════════════════════════════════════════════════════════════╗\n");
+    printf("║          ✦ SERVIDOR DE EVALUACIÓN ACADÉMICA INTERACTIVO ✦         ║\n");
+    printf("║                         Puerto: %d                              ║\n", PORT);
+    printf("╚═══════════════════════════════════════════════════════════════════╝\033[0m\n");
+    printf("\033[1;36m┌─────────────────── INFORMACIÓN DEL SISTEMA ────────────────────┐\n");
+    printf("│  • Estado: \033[1;32mActivo\033[1;36m                                              │\n");
+    printf("│  • Versión: 1.0                                                │\n");
+    printf("│  • Modo: Producción                                            │\n");
+    printf("└────────────────────────────────────────────────────────────────┘\033[0m\n");
+}
+
+void mostrar_estado_conexion(const char* evento, const char* ip, int socket, int num_clientes) {
+    time_t tiempo = time(NULL);
+    struct tm* tm_info = localtime(&tiempo);
+    char tiempo_str[20];
+    strftime(tiempo_str, 20, "%H:%M:%S", tm_info);
+
+    printf("\033[1;36m╔══════════════════════ EVENTO DEL SISTEMA ══════════════════════╗\033[0m\n");
+    printf("\033[1;36m║\033[0m \033[1;33m⏰ Hora: %s\033[0m\n", tiempo_str);
+    printf("\033[1;36m║\033[0m \033[1;35m🔔 Evento: %s\033[0m\n", evento);
+    printf("\033[1;36m║\033[0m \033[1;32m🌐 IP Cliente: %s\033[0m\n", ip);
+    printf("\033[1;36m║\033[0m \033[1;34m🔌 Socket: %d\033[0m\n", socket);
+    printf("\033[1;36m║\033[0m \033[1;33m👥 Clientes Activos: %d\033[0m\n", num_clientes);
+    printf("\033[1;36m╚══════════════════════════════════════════════════════════════════╝\033[0m\n");
+
+    // Mostrar barra de estado
+    printf("\033[1;37m[Estado del Servidor]\033[0m ");
+    for(int i = 0; i < num_clientes; i++) {
+        printf("\033[1;32m■\033[0m");
+    }
+    for(int i = num_clientes; i < 10; i++) {
+        printf("\033[1;31m□\033[0m");
+    }
+    printf(" (%d/10)\n\n", num_clientes);
 }
 
 void *manejar_cliente(void *socket_desc) {
@@ -343,6 +407,16 @@ void *manejar_cliente(void *socket_desc) {
     char buffer[MAX_BUFFER] = {0};
     int opcion;
     char matricula[20] = {0};
+    
+    // Obtener información del cliente
+    struct sockaddr_in addr;
+    socklen_t addr_size = sizeof(struct sockaddr_in);
+    getpeername(sock, (struct sockaddr *)&addr, &addr_size);
+    char *ip_cliente = inet_ntoa(addr.sin_addr);
+    
+    // Incrementar contador de clientes y mostrar conexión
+    clientes_activos++;
+    mostrar_estado_conexion("NUEVA CONEXIÓN", ip_cliente, sock, clientes_activos);
     
     while(1) {
         // Recibir opción del menú
@@ -377,7 +451,7 @@ void *manejar_cliente(void *socket_desc) {
             case 2: {
                 // Recibir matrícula
                 recv(sock, matricula, sizeof(matricula), 0);
-                enviar_test_psicometrico(sock);
+                enviar_test_psicometrico(sock, matricula);
                 break;
             }
             case 3: {
@@ -394,6 +468,9 @@ void *manejar_cliente(void *socket_desc) {
                 break;
             }
             case 5: {
+                // Mostrar mensaje de desconexión
+                clientes_activos--;
+                mostrar_estado_conexion("CLIENTE DESCONECTADO", ip_cliente, sock, clientes_activos);
                 free(socket_desc);
                 close(sock);
                 return 0;
@@ -440,7 +517,9 @@ int main() {
         exit(EXIT_FAILURE);
     }
     
-    printf("\033[1;34mServidor iniciado. Esperando conexiones...\033[0m\n");
+    mostrar_banner_servidor();
+    printf("\033[1;32m[✓] Servidor iniciado correctamente\033[0m\n");
+    printf("\033[1;33m[*] Esperando conexiones...\033[0m\n\n");
     
     while(1) {
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {

@@ -51,9 +51,12 @@ typedef struct {
 // Función para mostrar el kardex
 void mostrar_kardex(int sock) {
     char matricula[20];
-    printf("\033[1;32m=== VER KARDEX ===\033[0m\n\n");
-    printf("Ingrese su matrícula: ");
+    printf("\033[1;36m╔═══════════════════════════════════════╗\n");
+    printf("║         \033[1;33m✯ KARDEX ESCOLAR ✯\033[1;36m         ║\n");
+    printf("╚═══════════════════════════════════════╝\033[0m\n\n");
+    printf("\033[1;33mIngrese su matrícula:\033[0m ");
     scanf(" %[^\n]", matricula);
+    while (getchar() != '\n'); // Limpiar el buffer después de leer la matrícula
     
     // Enviar matrícula al servidor
     send(sock, matricula, sizeof(matricula), 0);
@@ -67,26 +70,29 @@ void mostrar_kardex(int sock) {
         Kardex kardex;
         recv(sock, &kardex, sizeof(Kardex), 0);
         
-        printf("\n\033[1;34m=== RESULTADOS ACADÉMICOS ===\033[0m\n");
-        printf("Matemáticas: %d\n", kardex.resultados_academicos.matematicas);
-        printf("Español: %d\n", kardex.resultados_academicos.espanol);
-        printf("Inglés: %d\n", kardex.resultados_academicos.ingles);
-        printf("Promedio general: %.2f\n", kardex.resultados_academicos.promedio);
+        printf("\n\033[1;34m┌─────────── RESULTADOS ACADÉMICOS ───────────┐\033[0m\n");
+        printf("\033[1;32m│\033[0m Matemáticas:\033[1;33m %d\033[0m\n", kardex.resultados_academicos.matematicas);
+        printf("\033[1;32m│\033[0m Español:\033[1;33m %d\033[0m\n", kardex.resultados_academicos.espanol);
+        printf("\033[1;32m│\033[0m Inglés:\033[1;33m %d\033[0m\n", kardex.resultados_academicos.ingles);
+        printf("\033[1;32m│\033[0m Promedio general:\033[1;33m %.2f\033[0m\n", kardex.resultados_academicos.promedio);
+        printf("\033[1;34m└───────────────────────────────────────────────┘\033[0m\n");
         
-        printf("\n\033[1;34m=== RESULTADOS TEST PSICOMÉTRICO ===\033[0m\n");
-        printf("Respuestas correctas: %d de %d\n", kardex.resultados_psicometricos.correctas, kardex.resultados_psicometricos.total);
-        printf("Porcentaje de aciertos: %.2f%%\n", kardex.resultados_psicometricos.porcentaje);
-        printf("Fecha: %s\n", kardex.resultados_psicometricos.fecha);
+        printf("\n\033[1;34m┌─────────── RESULTADOS PSICOMÉTRICOS ─────────┐\033[0m\n");
+        printf("\033[1;32m│\033[0m Respuestas correctas:\033[1;33m %d de %d\033[0m\n", kardex.resultados_psicometricos.correctas, kardex.resultados_psicometricos.total);
+        printf("\033[1;32m│\033[0m Porcentaje de aciertos:\033[1;33m %.2f%%\033[0m\n", kardex.resultados_psicometricos.porcentaje);
+        printf("\033[1;32m│\033[0m Fecha:\033[1;33m %s\033[0m\n", kardex.resultados_psicometricos.fecha);
+        printf("\033[1;34m└───────────────────────────────────────────────┘\033[0m\n");
     } else {
         // Si el estado indica error, recibir el mensaje de error
         char buffer[MAX_BUFFER];
         recv(sock, buffer, MAX_BUFFER, 0);
-        printf("\n\033[1;31m%s\033[0m\n", buffer);
+        printf("\n\033[1;31m┌─────────── ERROR ───────────┐\n");
+        printf("│ %s\n", buffer);
+        printf("└────────────────────────────┘\033[0m\n");
     }
     
     printf("\nPresiona Enter para continuar...");
-    getchar();
-    getchar();
+    while (getchar() != '\n'); // Limpiar el buffer después de leer
 }
 
 // Función para limpiar la pantalla
@@ -96,15 +102,17 @@ void limpiar_pantalla() {
 
 // Función para mostrar el menú principal
 void mostrar_menu() {
-    printf("\033[1;34m╔══════════════════════════╗\n");
-    printf("║    SISTEMA DE EXAMEN    ║\n");
-    printf("╚══════════════════════════╝\033[0m\n\n");
-    printf("1. Registrarse\n");
-    printf("2. Iniciar Test Psicométrico\n");
-    printf("3. Realizar Examen Académico\n");
-    printf("4. Ver Cardex\n");
-    printf("5. Salir\n\n");
-    printf("Seleccione una opción: ");
+    printf("\033[1;36m╔═══════════════════════════════════════╗\n");
+    printf("║      \033[1;33m✯ SISTEMA DE EVALUACIÓN ✯\033[1;36m      ║\n");
+    printf("╚═══════════════════════════════════════╝\033[0m\n\n");
+    printf("\033[1;34m┌─────────────── MENÚ ───────────────┐\033[0m\n\n");
+    printf("\033[1;32m[1]\033[0m ► Registrarse\n");
+    printf("\033[1;32m[2]\033[0m ► Iniciar Test Psicométrico\n");
+    printf("\033[1;32m[3]\033[0m ► Realizar Examen Académico\n");
+    printf("\033[1;32m[4]\033[0m ► Ver Kardex\n");
+    printf("\033[1;31m[5]\033[0m ► Salir\n\n");
+    printf("\033[1;34m└────────────────────────────────────┘\033[0m\n\n");
+    printf("\033[1;33mSeleccione una opción:\033[0m ");
 }
 
 void realizar_examen_academico(int sock) {
@@ -139,15 +147,34 @@ void realizar_examen_academico(int sock) {
             return;
         }
         
-        printf("\n\033[1;36mPregunta %d:\033[0m\n%s\n", i + 1, pregunta.pregunta);
-        printf("\033[1;33mA)\033[0m %s\n", pregunta.opciones[0]);
-        printf("\033[1;33mB)\033[0m %s\n", pregunta.opciones[1]);
-        printf("\033[1;33mC)\033[0m %s\n", pregunta.opciones[2]);
+        // Mostrar marco superior
+        printf("\n\033[1;36m╔════════════ Pregunta %d de %d ════════════╗\033[0m\n", i + 1, num_mate);
+        printf("\033[1;36m║\033[0m                                          \033[1;36m║\033[0m\n");
+        printf("\033[1;36m║\033[0m \033[1;37m%s\033[0m", pregunta.pregunta);
+        // Agregar espacios para alinear el marco derecho
+        int espacios = 42 - strlen(pregunta.pregunta);
+        for(int j = 0; j < espacios; j++) printf(" ");
+        printf("\033[1;36m║\033[0m\n");
+        printf("\033[1;36m║\033[0m                                          \033[1;36m║\033[0m\n");
+        printf("\033[1;36m║\033[0m   \033[1;33mA)\033[0m %s", pregunta.opciones[0]);
+        espacios = 39 - strlen(pregunta.opciones[0]);
+        for(int j = 0; j < espacios; j++) printf(" ");
+        printf("\033[1;36m║\033[0m\n");
+        printf("\033[1;36m║\033[0m   \033[1;33mB)\033[0m %s", pregunta.opciones[1]);
+        espacios = 39 - strlen(pregunta.opciones[1]);
+        for(int j = 0; j < espacios; j++) printf(" ");
+        printf("\033[1;36m║\033[0m\n");
+        printf("\033[1;36m║\033[0m   \033[1;33mC)\033[0m %s", pregunta.opciones[2]);
+        espacios = 39 - strlen(pregunta.opciones[2]);
+        for(int j = 0; j < espacios; j++) printf(" ");
+        printf("\033[1;36m║\033[0m\n");
+        printf("\033[1;36m╚══════════════════════════════════════════╝\033[0m\n");
         
         char respuesta;
         do {
             printf("\033[1;32mTu respuesta (A/B/C):\033[0m ");
             scanf(" %c", &respuesta);
+            while (getchar() != '\n'); // Limpiar el buffer después de leer 
             respuesta = toupper(respuesta);
             if (respuesta != 'A' && respuesta != 'B' && respuesta != 'C') {
                 printf("\033[1;31mPor favor, ingresa una opción válida (A, B o C)\033[0m\n");
@@ -165,11 +192,18 @@ void realizar_examen_academico(int sock) {
             return;
         }
         
+        printf("\n");
         if (es_correcta) {
-            printf("\033[1;32m¡Correcto!\033[0m\n");
+            printf("\033[1;32m╔═══════════════ RESULTADO ═══════════════╗\n");
+            printf("║          ¡RESPUESTA CORRECTA!          ║\n");
+            printf("║             ¡Excelente! 🌟             ║\n");
+            printf("╚══════════════════════════════════════════╝\033[0m\n");
             correctas_mate++;
         } else {
-            printf("\033[1;31mIncorrecto\033[0m\n");
+            printf("\033[1;31m╔═══════════════ RESULTADO ═══════════════╗\n");
+            printf("║         RESPUESTA INCORRECTA          ║\n");
+            printf("║       ¡Sigue intentándolo! 📚         ║\n");
+            printf("╚══════════════════════════════════════════╝\033[0m\n");
         }
     }
     
@@ -181,15 +215,34 @@ void realizar_examen_academico(int sock) {
             return;
         }
         
-        printf("\n\033[1;36mPregunta %d:\033[0m\n%s\n", i + 1, pregunta.pregunta);
-        printf("\033[1;33mA)\033[0m %s\n", pregunta.opciones[0]);
-        printf("\033[1;33mB)\033[0m %s\n", pregunta.opciones[1]);
-        printf("\033[1;33mC)\033[0m %s\n", pregunta.opciones[2]);
+        // Mostrar marco superior
+        printf("\n\033[1;36m╔════════════ Pregunta %d de %d ════════════╗\033[0m\n", i + 1, num_espanol);
+        printf("\033[1;36m║\033[0m                                          \033[1;36m║\033[0m\n");
+        printf("\033[1;36m║\033[0m \033[1;37m%s\033[0m", pregunta.pregunta);
+        // Agregar espacios para alinear el marco derecho
+        int espacios = 42 - strlen(pregunta.pregunta);
+        for(int j = 0; j < espacios; j++) printf(" ");
+        printf("\033[1;36m║\033[0m\n");
+        printf("\033[1;36m║\033[0m                                          \033[1;36m║\033[0m\n");
+        printf("\033[1;36m║\033[0m   \033[1;33mA)\033[0m %s", pregunta.opciones[0]);
+        espacios = 39 - strlen(pregunta.opciones[0]);
+        for(int j = 0; j < espacios; j++) printf(" ");
+        printf("\033[1;36m║\033[0m\n");
+        printf("\033[1;36m║\033[0m   \033[1;33mB)\033[0m %s", pregunta.opciones[1]);
+        espacios = 39 - strlen(pregunta.opciones[1]);
+        for(int j = 0; j < espacios; j++) printf(" ");
+        printf("\033[1;36m║\033[0m\n");
+        printf("\033[1;36m║\033[0m   \033[1;33mC)\033[0m %s", pregunta.opciones[2]);
+        espacios = 39 - strlen(pregunta.opciones[2]);
+        for(int j = 0; j < espacios; j++) printf(" ");
+        printf("\033[1;36m║\033[0m\n");
+        printf("\033[1;36m╚══════════════════════════════════════════╝\033[0m\n");
         
         char respuesta;
         do {
             printf("\033[1;32mTu respuesta (A/B/C):\033[0m ");
             scanf(" %c", &respuesta);
+            while (getchar() != '\n'); // Limpiar el buffer después de leer
             respuesta = toupper(respuesta);
             if (respuesta != 'A' && respuesta != 'B' && respuesta != 'C') {
                 printf("\033[1;31mPor favor, ingresa una opción válida (A, B o C)\033[0m\n");
@@ -200,11 +253,18 @@ void realizar_examen_academico(int sock) {
         
         char es_correcta;
         recv(sock, &es_correcta, 1, 0);
+        printf("\n");
         if (es_correcta) {
-            printf("\033[1;32m¡Correcto!\033[0m\n");
+            printf("\033[1;32m╔═══════════════ RESULTADO ═══════════════╗\n");
+            printf("║          ¡RESPUESTA CORRECTA!          ║\n");
+            printf("║             ¡Excelente! 🌟             ║\n");
+            printf("╚══════════════════════════════════════════╝\033[0m\n");
             correctas_espanol++;
         } else {
-            printf("\033[1;31mIncorrecto\033[0m\n");
+            printf("\033[1;31m╔═══════════════ RESULTADO ═══════════════╗\n");
+            printf("║         RESPUESTA INCORRECTA          ║\n");
+            printf("║       ¡Sigue intentándolo! 📚         ║\n");
+            printf("╚══════════════════════════════════════════╝\033[0m\n");
         }
     }
     
@@ -216,15 +276,34 @@ void realizar_examen_academico(int sock) {
             return;
         }
         
-        printf("\n\033[1;36mPregunta %d:\033[0m\n%s\n", i + 1, pregunta.pregunta);
-        printf("\033[1;33mA)\033[0m %s\n", pregunta.opciones[0]);
-        printf("\033[1;33mB)\033[0m %s\n", pregunta.opciones[1]);
-        printf("\033[1;33mC)\033[0m %s\n", pregunta.opciones[2]);
+        // Mostrar marco superior
+        printf("\n\033[1;36m╔════════════ Pregunta %d de %d ════════════╗\033[0m\n", i + 1, num_ingles);
+        printf("\033[1;36m║\033[0m                                          \033[1;36m║\033[0m\n");
+        printf("\033[1;36m║\033[0m \033[1;37m%s\033[0m", pregunta.pregunta);
+        // Agregar espacios para alinear el marco derecho
+        int espacios = 42 - strlen(pregunta.pregunta);
+        for(int j = 0; j < espacios; j++) printf(" ");
+        printf("\033[1;36m║\033[0m\n");
+        printf("\033[1;36m║\033[0m                                          \033[1;36m║\033[0m\n");
+        printf("\033[1;36m║\033[0m   \033[1;33mA)\033[0m %s", pregunta.opciones[0]);
+        espacios = 39 - strlen(pregunta.opciones[0]);
+        for(int j = 0; j < espacios; j++) printf(" ");
+        printf("\033[1;36m║\033[0m\n");
+        printf("\033[1;36m║\033[0m   \033[1;33mB)\033[0m %s", pregunta.opciones[1]);
+        espacios = 39 - strlen(pregunta.opciones[1]);
+        for(int j = 0; j < espacios; j++) printf(" ");
+        printf("\033[1;36m║\033[0m\n");
+        printf("\033[1;36m║\033[0m   \033[1;33mC)\033[0m %s", pregunta.opciones[2]);
+        espacios = 39 - strlen(pregunta.opciones[2]);
+        for(int j = 0; j < espacios; j++) printf(" ");
+        printf("\033[1;36m║\033[0m\n");
+        printf("\033[1;36m╚══════════════════════════════════════════╝\033[0m\n");
         
         char respuesta;
         do {
             printf("\033[1;32mTu respuesta (A/B/C):\033[0m ");
             scanf(" %c", &respuesta);
+            while (getchar() != '\n'); // Limpiar el buffer después de leer la matrícula
             respuesta = toupper(respuesta);
             if (respuesta != 'A' && respuesta != 'B' && respuesta != 'C') {
                 printf("\033[1;31mPor favor, ingresa una opción válida (A, B o C)\033[0m\n");
@@ -235,42 +314,68 @@ void realizar_examen_academico(int sock) {
         
         char es_correcta;
         recv(sock, &es_correcta, 1, 0);
+        printf("\n");
         if (es_correcta) {
-            printf("\033[1;32m¡Correcto!\033[0m\n");
+            printf("\033[1;32m╔═══════════════ RESULTADO ═══════════════╗\n");
+            printf("║          ¡RESPUESTA CORRECTA!          ║\n");
+            printf("║             ¡Excelente! 🌟             ║\n");
+            printf("╚══════════════════════════════════════════╝\033[0m\n");
             correctas_ingles++;
         } else {
-            printf("\033[1;31mIncorrecto\033[0m\n");
+            printf("\033[1;31m╔═══════════════ RESULTADO ═══════════════╗\n");
+            printf("║         RESPUESTA INCORRECTA          ║\n");
+            printf("║       ¡Sigue intentándolo! 📚         ║\n");
+            printf("╚══════════════════════════════════════════╝\033[0m\n");
         }
     }
     
     // Recibir resultados
     recv(sock, &resultado, sizeof(ResultadoAcademico), 0);
     
-    printf("\n\033[1;34m=== RESULTADOS DEL EXAMEN ACADÉMICO ===\033[0m\n");
-    printf("Matemáticas: %d/%d\n", resultado.matematicas, num_mate);
-    printf("Español: %d/%d\n", resultado.espanol, num_espanol);
-    printf("Inglés: %d/%d\n", resultado.ingles, num_ingles);
-    printf("Promedio general: %.2f\n", resultado.promedio);
+    printf("\n\033[1;36m╔═══════════════ RESULTADOS FINALES ═══════════════╗\n");
+    printf("║                                                  ║\n");
+    printf("║  \033[1;33mMatemáticas:\033[0m %d/%d                             ║\n", resultado.matematicas, num_mate);
+    printf("║  \033[1;33mEspañol:\033[0m %d/%d                                ║\n", resultado.espanol, num_espanol);
+    printf("║  \033[1;33mInglés:\033[0m %d/%d                                 ║\n", resultado.ingles, num_ingles);
+    printf("║  \033[1;33mPromedio general:\033[0m %.2f                        ║\n", resultado.promedio);
+    printf("║                                                  ║\n");
+    
+    float porcentaje_mate = (float)resultado.matematicas / num_mate * 100;
+    float porcentaje_espanol = (float)resultado.espanol / num_espanol * 100;
+    float porcentaje_ingles = (float)resultado.ingles / num_ingles * 100;
+    
+    printf("║  \033[1;34mPorcentajes por materia:\033[0m                      ║\n");
+    printf("║  Matemáticas: %.1f%%                              ║\n", porcentaje_mate);
+    printf("║  Español: %.1f%%                                 ║\n", porcentaje_espanol);
+    printf("║  Inglés: %.1f%%                                  ║\n", porcentaje_ingles);
+    printf("║                                                  ║\n");
     
     if (resultado.promedio >= 8.0) {
-        printf("\033[1;32m¡Excelente desempeño!\033[0m\n");
+        printf("║  \033[1;32m¡Excelente desempeño! 🌟                         \033[1;36m║\n");
+        printf("║  \033[1;32m¡Has demostrado un gran dominio! 🏆               \033[1;36m║\n");
     } else if (resultado.promedio >= 6.0) {
-        printf("\033[1;33mBuen trabajo, pero hay espacio para mejorar.\033[0m\n");
+        printf("║  \033[1;33m¡Buen trabajo! Hay espacio para mejorar 📚        \033[1;36m║\n");
+        printf("║  \033[1;33m¡Sigue practicando para alcanzar la excelencia! 💪  \033[1;36m║\n");
     } else {
-        printf("\033[1;31mNecesitas estudiar más.\033[0m\n");
+        printf("║  \033[1;31m¡Ánimo! Necesitas reforzar tus conocimientos 📖    \033[1;36m║\n");
+        printf("║  \033[1;31m¡Cada intento es una oportunidad de mejorar! 🎯     \033[1;36m║\n");
     }
     
+    printf("║                                                  ║\n");
+    printf("╚══════════════════════════════════════════════════╝\033[0m\n");
+    
     printf("\nPresiona Enter para continuar...");
-    getchar();
-    getchar();
+    while (getchar() != '\n'); // Limpiar el buffer después de leer
 }
 
 void realizar_test_psicometrico(int sock) {
     int total_preguntas;
     recv(sock, &total_preguntas, sizeof(int), 0);
     
-    printf("\033[1;32m=== TEST PSICOMÉTRICO ===\033[0m\n\n");
-    printf("Total de preguntas: %d\n\n", total_preguntas);
+    printf("\033[1;36m╔═══════════════════════════════════════╗\n");
+    printf("║      \033[1;33m✯ TEST PSICOMÉTRICO ✯\033[1;36m      ║\n");
+    printf("╚═══════════════════════════════════════╝\033[0m\n\n");
+    printf("\033[1;34mTotal de preguntas: \033[1;33m%d\033[0m\n\n", total_preguntas);
     
     int correctas = 0;
     Pregunta pregunta;
@@ -278,16 +383,36 @@ void realizar_test_psicometrico(int sock) {
     for (int i = 0; i < total_preguntas; i++) {
         recv(sock, &pregunta, sizeof(Pregunta), 0);
         
-        printf("\nPregunta %d:\n%s\n", i + 1, pregunta.pregunta);
-        printf("A) %s\n", pregunta.opciones[0]);
-        printf("B) %s\n", pregunta.opciones[1]);
-        printf("C) %s\n", pregunta.opciones[2]);
+        printf("\n\033[1;36m╔════════════ Pregunta %d de %d ════════════╗\033[0m\n", i + 1, total_preguntas);
+        printf("\033[1;36m║\033[0m                                          \033[1;36m║\033[0m\n");
+        printf("\033[1;36m║\033[0m \033[1;37m%s\033[0m", pregunta.pregunta);
+        int espacios = 42 - strlen(pregunta.pregunta);
+        for(int j = 0; j < espacios; j++) printf(" ");
+        printf("\033[1;36m║\033[0m\n");
+        printf("\033[1;36m║\033[0m                                          \033[1;36m║\033[0m\n");
+        printf("\033[1;36m║\033[0m   \033[1;33mA)\033[0m %s", pregunta.opciones[0]);
+        espacios = 39 - strlen(pregunta.opciones[0]);
+        for(int j = 0; j < espacios; j++) printf(" ");
+        printf("\033[1;36m║\033[0m\n");
+        printf("\033[1;36m║\033[0m   \033[1;33mB)\033[0m %s", pregunta.opciones[1]);
+        espacios = 39 - strlen(pregunta.opciones[1]);
+        for(int j = 0; j < espacios; j++) printf(" ");
+        printf("\033[1;36m║\033[0m\n");
+        printf("\033[1;36m║\033[0m   \033[1;33mC)\033[0m %s", pregunta.opciones[2]);
+        espacios = 39 - strlen(pregunta.opciones[2]);
+        for(int j = 0; j < espacios; j++) printf(" ");
+        printf("\033[1;36m║\033[0m\n");
+        printf("\033[1;36m╚══════════════════════════════════════════╝\033[0m\n");
         
         char respuesta;
         do {
-            printf("Tu respuesta (A/B/C): ");
+            printf("\033[1;32mTu respuesta (A/B/C):\033[0m ");
             scanf(" %c", &respuesta);
+            while (getchar() != '\n'); // Limpiar el buffer después de leer
             respuesta = toupper(respuesta);
+            if (respuesta != 'A' && respuesta != 'B' && respuesta != 'C') {
+                printf("\033[1;31mPor favor, ingresa una opción válida (A, B o C)\033[0m\n");
+            }
         } while (respuesta != 'A' && respuesta != 'B' && respuesta != 'C');
         
         send(sock, &respuesta, 1, 0);
@@ -295,58 +420,86 @@ void realizar_test_psicometrico(int sock) {
         char es_correcta;
         recv(sock, &es_correcta, 1, 0);
         
+        printf("\n");
         if (es_correcta) {
-            printf("\033[1;32m¡Correcto!\033[0m\n");
+            printf("\033[1;32m╔═══════════════ RESULTADO ═══════════════╗\n");
+            printf("║          ¡RESPUESTA CORRECTA!          ║\n");
+            printf("║             ¡Excelente! 🌟             ║\n");
+            printf("╚══════════════════════════════════════════╝\033[0m\n");
             correctas++;
         } else {
-            printf("\033[1;31mIncorrecto\033[0m\n");
+            printf("\033[1;31m╔═══════════════ RESULTADO ═══════════════╗\n");
+            printf("║         RESPUESTA INCORRECTA          ║\n");
+            printf("║       ¡Sigue intentándolo! 📚         ║\n");
+            printf("╚══════════════════════════════════════════╝\033[0m\n");
         }
     }
     
     float porcentaje = (float)correctas / total_preguntas * 100;
-    printf("\n=== Resultados ===\n");
-    printf("Respuestas correctas: %d de %d\n", correctas, total_preguntas);
-    printf("Porcentaje de aciertos: %.2f%%\n", porcentaje);
-    
+    printf("\n\033[1;36m╔═══════════════ RESULTADOS FINALES ═══════════════╗\n");
+    printf("║                                                  ║\n");
+    printf("║  \033[1;33mRespuestas correctas:\033[0m %d de %d                    ║\n", correctas, total_preguntas);
+    printf("║  \033[1;33mPorcentaje de aciertos:\033[0m %.2f%%                   ║\n", porcentaje);
+    printf("║                                                  ║\n");
     if (porcentaje >= 80) {
-        printf("\033[1;32m¡Excelente desempeño!\033[0m\n");
+        printf("║  \033[1;32m¡Excelente desempeño! 🌟                         \033[1;36m║\n");
+        printf("║  \033[1;32m¡Has demostrado un gran dominio! 🏆               \033[1;36m║\n");
     } else if (porcentaje >= 60) {
-        printf("\033[1;33mBuen trabajo, pero hay espacio para mejorar.\033[0m\n");
+        printf("║  \033[1;33m¡Buen trabajo! Hay espacio para mejorar 📚        \033[1;36m║\n");
+        printf("║  \033[1;33m¡Sigue practicando para alcanzar la excelencia! 💪  \033[1;36m║\n");
     } else {
-        printf("\033[1;31mNecesitas practicar más.\033[0m\n");
+        printf("║  \033[1;31mNecesitas practicar más 📖                        \033[1;36m║\n");
+        printf("║  \033[1;31m¡No te rindas, cada intento es una oportunidad! 🎯  \033[1;36m║\n");
     }
+    printf("║                                                  ║\n");
+    printf("╚══════════════════════════════════════════════════╝\033[0m\n");
+
     
     printf("\nPresiona Enter para continuar...");
-    getchar();
-    getchar();
+    while (getchar() != '\n'); // Limpiar el buffer después de leer
 }
 
 // Función para registrar usuario
 Usuario registrar_usuario() {
     Usuario usuario;
     limpiar_pantalla();
-    printf("\033[1;32m=== REGISTRO DE USUARIO ===\033[0m\n\n");
+    printf("\033[1;36m╔═══════════════════════════════════════╗\n");
+    printf("║       \033[1;33m✯ REGISTRO DE USUARIO ✯\033[1;36m       ║\n");
+    printf("╚═══════════════════════════════════════╝\033[0m\n\n");
     
-    printf("Nombre: ");
+    printf("\033[1;34m┌─────────── DATOS PERSONALES ───────────┐\033[0m\n\n");
+    
+    printf("\033[1;32m►\033[0m Nombre: ");
     scanf(" %[^\n]", usuario.nombre);
+    while (getchar() != '\n'); // Limpiar el buffer después de leer
     
-    printf("Matrícula: ");
+    printf("\033[1;32m►\033[0m Matrícula: ");
     scanf(" %[^\n]", usuario.matricula);
+    while (getchar() != '\n'); // Limpiar el buffer después de leer
     
-    printf("Carrera: ");
+    printf("\033[1;32m►\033[0m Carrera: ");
     scanf(" %[^\n]", usuario.carrera);
+    while (getchar() != '\n'); // Limpiar el buffer después de leer
     
-    printf("Edad: ");
+    printf("\033[1;32m►\033[0m Edad: ");
     scanf("%d", &usuario.edad);
+    while (getchar() != '\n'); // Limpiar el buffer después de leer
     
-    printf("Género (M/F): ");
+    printf("\033[1;32m►\033[0m Género (M/F): ");
     scanf(" %c", &usuario.genero);
+    while (getchar() != '\n'); // Limpiar el buffer después de leer
     
-    printf("Semestre: ");
+    printf("\033[1;32m►\033[0m Semestre: ");
     scanf("%d", &usuario.semestre);
+    while (getchar() != '\n'); // Limpiar el buffer después de leer
     
-    printf("Contraseña: ");
+    printf("\n\033[1;34m┌─────────── SEGURIDAD ───────────┐\033[0m\n\n");
+    
+    printf("\033[1;32m►\033[0m Contraseña: ");
     scanf(" %[^\n]", usuario.password);
+    while (getchar() != '\n'); // Limpiar el buffer después de leer
+    
+    printf("\n\033[1;34m└────────────────────────────────┘\033[0m\n");
     
     return usuario;
 }
@@ -392,8 +545,7 @@ int main() {
                 recv(sock, buffer, MAX_BUFFER, 0);
                 printf("\n%s\n", buffer);
                 printf("\nPresione Enter para continuar...");
-                getchar();
-                getchar();
+                while (getchar() != '\n'); // Limpiar el buffer después de leer
                 break;
             }
             case 2: {
@@ -402,6 +554,7 @@ int main() {
                 char matricula[20];
                 printf("\nIngrese su matrícula: ");
                 scanf(" %[^\n]", matricula);
+                while (getchar() != '\n'); // Limpiar el buffer después de leer la matrícula
                 send(sock, matricula, sizeof(matricula), 0);
                 realizar_test_psicometrico(sock);
                 break;
@@ -412,6 +565,7 @@ int main() {
                 char matricula[20];
                 printf("\nIngrese su matrícula: ");
                 scanf(" %[^\n]", matricula);
+                while (getchar() != '\n'); // Limpiar el buffer después de leer la matrícula
                 send(sock, matricula, sizeof(matricula), 0);
                 realizar_examen_academico(sock);
                

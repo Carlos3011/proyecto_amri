@@ -1,5 +1,4 @@
-¿Qué figura completa la secuencia?
-[□ △ ○] [△ ○ □] [○ □ ?]
+¿Qué figura completa la secuencia? [□ △ ○] [△ ○ □] [○ □ ?]
 A) △
 B) ○
 C) □
@@ -51,8 +50,7 @@ B) Z
 C) Última N
 RESPUESTA:B
 
-¿Qué figura sigue en la secuencia?
-[○ □ □] [□ ○ □] [□ □ ?]
+¿Qué figura sigue en la secuencia? [○ □ □] [□ ○ □] [□ □ ?]
 A) ○
 B) □
 C) △
