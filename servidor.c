@@ -57,35 +57,74 @@ void guardar_kardex(const char* matricula, ResultadoAcademico* resultado_academi
 
 // Función para cargar preguntas desde archivo
 int cargar_preguntas(const char* archivo, Pregunta* preguntas) {
-    FILE* f = fopen(archivo, "r");
-    if (!f) return 0;
+    FILE* f = fopen(archivo, "rb");
+    if (!f) {
+        printf("Error al abrir el archivo: %s\n", archivo);
+        return 0;
+    }
     
     int count = 0;
     char linea[512];
+    char *resultado;
     
-    while (count < MAX_PREGUNTAS && fgets(linea, sizeof(linea), f)) {
+    while (count < MAX_PREGUNTAS) {
+        // Leer pregunta
+        resultado = fgets(linea, sizeof(linea), f);
+        if (!resultado) break;
+        
+        // Saltar líneas vacías
         if (strlen(linea) <= 1) continue;
-        strcpy(preguntas[count].pregunta, linea);
+        
+        // Eliminar el salto de línea final si existe
+        size_t len = strlen(linea);
+        if (len > 0 && linea[len-1] == '\n') {
+            linea[len-1] = '\0';
+        }
+        
+        // Copiar pregunta
+        strncpy(preguntas[count].pregunta, linea, sizeof(preguntas[count].pregunta) - 1);
+        preguntas[count].pregunta[sizeof(preguntas[count].pregunta) - 1] = '\0';
         
         // Leer opciones
+        int opciones_validas = 0;
         for (int i = 0; i < 3; i++) {
-            if (!fgets(linea, sizeof(linea), f)) break;
-            if (strlen(linea) > 2) {
-                strcpy(preguntas[count].opciones[i], linea + 3);
-                preguntas[count].opciones[i][strlen(preguntas[count].opciones[i])-1] = '\0';
+            resultado = fgets(linea, sizeof(linea), f);
+            if (!resultado) break;
+            
+            // Verificar formato de opción
+            if (strlen(linea) > 3 && (linea[0] == 'A' || linea[0] == 'B' || linea[0] == 'C') && linea[1] == ')' && linea[2] == ' ') {
+                // Eliminar el salto de línea final
+                len = strlen(linea);
+                if (len > 0 && linea[len-1] == '\n') {
+                    linea[len-1] = '\0';
+                }
+                
+                // Copiar opción sin el prefijo "X) "
+                strncpy(preguntas[count].opciones[i], linea + 3, sizeof(preguntas[count].opciones[i]) - 1);
+                preguntas[count].opciones[i][sizeof(preguntas[count].opciones[i]) - 1] = '\0';
+                opciones_validas++;
             }
         }
         
+        // Verificar que se leyeron todas las opciones
+        if (opciones_validas != 3) continue;
+        
         // Leer respuesta
-        if (fgets(linea, sizeof(linea), f)) {
-            if (strncmp(linea, "RESPUESTA:", 10) == 0) {
-                preguntas[count].respuesta = linea[10];
+        resultado = fgets(linea, sizeof(linea), f);
+        if (!resultado) break;
+        
+        if (strncmp(linea, "RESPUESTA:", 10) == 0) {
+            preguntas[count].respuesta = toupper(linea[10]);
+            if (preguntas[count].respuesta >= 'A' && preguntas[count].respuesta <= 'C') {
                 count++;
             }
         }
     }
     
     fclose(f);
+    if (count == 0) {
+        printf("No se pudieron cargar preguntas del archivo: %s\n", archivo);
+    }
     return count;
 }
 
@@ -259,50 +298,59 @@ void *manejar_cliente(void *socket_desc) {
     int opcion;
     char matricula[20] = {0};
     
-    // Recibir opción del menú
-    recv(sock, &opcion, sizeof(int), 0);
-    
-    switch(opcion) {
-        case 1: {
-            Usuario usuario;
-            recv(sock, &usuario, sizeof(Usuario), 0);
-            
-            // Guardar en archivo
-            FILE *f = fopen("registros.txt", "a");
-            if (f != NULL) {
-                fprintf(f, "%s,%s,%s,%d,%c,%d,%s\n", 
-                        usuario.nombre, 
-                        usuario.matricula,
-                        usuario.carrera,
-                        usuario.edad,
-                        usuario.genero,
-                        usuario.semestre,
-                        usuario.password);
-                fclose(f);
+    while(1) {
+        // Recibir opción del menú
+        if (recv(sock, &opcion, sizeof(int), 0) <= 0) {
+            break; // Si el cliente se desconecta
+        }
+        
+        switch(opcion) {
+            case 1: {
+                Usuario usuario;
+                recv(sock, &usuario, sizeof(Usuario), 0);
+                
+                // Guardar en archivo
+                FILE *f = fopen("registros.txt", "a");
+                if (f != NULL) {
+                    fprintf(f, "%s,%s,%s,%d,%c,%d,%s\n", 
+                            usuario.nombre, 
+                            usuario.matricula,
+                            usuario.carrera,
+                            usuario.edad,
+                            usuario.genero,
+                            usuario.semestre,
+                            usuario.password);
+                    fclose(f);
+                }
+                
+                // Enviar confirmación
+                char *mensaje = "Registro exitoso";
+                send(sock, mensaje, strlen(mensaje), 0);
+                break;
             }
-            
-            // Enviar confirmación
-            char *mensaje = "Registro exitoso";
-            send(sock, mensaje, strlen(mensaje), 0);
-            break;
-        }
-        case 2: {
-            // Recibir matrícula
-            recv(sock, matricula, sizeof(matricula), 0);
-            enviar_test_psicometrico(sock);
-            break;
-        }
-        case 3: {
-            // Recibir matrícula
-            recv(sock, matricula, sizeof(matricula), 0);
-            enviar_examen_academico(sock, matricula);
-            break;
-        }
-        case 4: {
-            // Recibir matrícula
-            recv(sock, matricula, sizeof(matricula), 0);
-            enviar_kardex(sock, matricula);
-            break;
+            case 2: {
+                // Recibir matrícula
+                recv(sock, matricula, sizeof(matricula), 0);
+                enviar_test_psicometrico(sock);
+                break;
+            }
+            case 3: {
+                // Recibir matrícula
+                recv(sock, matricula, sizeof(matricula), 0);
+                enviar_examen_academico(sock, matricula);
+                break;
+            }
+            case 4: {
+                // Recibir matrícula
+                recv(sock, matricula, sizeof(matricula), 0);
+                enviar_kardex(sock, matricula);
+                break;
+            }
+            case 5: {
+                free(socket_desc);
+                close(sock);
+                return 0;
+            }
         }
     }
     

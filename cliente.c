@@ -117,18 +117,25 @@ void realizar_examen_academico(int sock) {
     
     printf("\033[1;32m=== EXAMEN DE MATEMÁTICAS ===\033[0m\n\n");
     for (int i = 0; i < num_mate; i++) {
-        recv(sock, &pregunta, sizeof(Pregunta), 0);
+        memset(&pregunta, 0, sizeof(Pregunta));
+        if (recv(sock, &pregunta, sizeof(Pregunta), 0) <= 0) {
+            printf("\033[1;31mError al recibir la pregunta\033[0m\n");
+            return;
+        }
         
-        printf("\nPregunta %d:\n%s\n", i + 1, pregunta.pregunta);
-        printf("A) %s\n", pregunta.opciones[0]);
-        printf("B) %s\n", pregunta.opciones[1]);
-        printf("C) %s\n", pregunta.opciones[2]);
+        printf("\n\033[1;36mPregunta %d:\033[0m\n%s\n", i + 1, pregunta.pregunta);
+        printf("\033[1;33mA)\033[0m %s\n", pregunta.opciones[0]);
+        printf("\033[1;33mB)\033[0m %s\n", pregunta.opciones[1]);
+        printf("\033[1;33mC)\033[0m %s\n", pregunta.opciones[2]);
         
         char respuesta;
         do {
-            printf("Tu respuesta (A/B/C): ");
+            printf("\033[1;32mTu respuesta (A/B/C):\033[0m ");
             scanf(" %c", &respuesta);
             respuesta = toupper(respuesta);
+            if (respuesta != 'A' && respuesta != 'B' && respuesta != 'C') {
+                printf("\033[1;31mPor favor, ingresa una opción válida (A, B o C)\033[0m\n");
+            }
         } while (respuesta != 'A' && respuesta != 'B' && respuesta != 'C');
         
         send(sock, &respuesta, 1, 0);
@@ -136,18 +143,25 @@ void realizar_examen_academico(int sock) {
     
     printf("\n\033[1;32m=== EXAMEN DE ESPAÑOL ===\033[0m\n\n");
     for (int i = 0; i < num_espanol; i++) {
-        recv(sock, &pregunta, sizeof(Pregunta), 0);
+        memset(&pregunta, 0, sizeof(Pregunta));
+        if (recv(sock, &pregunta, sizeof(Pregunta), 0) <= 0) {
+            printf("\033[1;31mError al recibir la pregunta\033[0m\n");
+            return;
+        }
         
-        printf("\nPregunta %d:\n%s\n", i + 1, pregunta.pregunta);
-        printf("A) %s\n", pregunta.opciones[0]);
-        printf("B) %s\n", pregunta.opciones[1]);
-        printf("C) %s\n", pregunta.opciones[2]);
+        printf("\n\033[1;36mPregunta %d:\033[0m\n%s\n", i + 1, pregunta.pregunta);
+        printf("\033[1;33mA)\033[0m %s\n", pregunta.opciones[0]);
+        printf("\033[1;33mB)\033[0m %s\n", pregunta.opciones[1]);
+        printf("\033[1;33mC)\033[0m %s\n", pregunta.opciones[2]);
         
         char respuesta;
         do {
-            printf("Tu respuesta (A/B/C): ");
+            printf("\033[1;32mTu respuesta (A/B/C):\033[0m ");
             scanf(" %c", &respuesta);
             respuesta = toupper(respuesta);
+            if (respuesta != 'A' && respuesta != 'B' && respuesta != 'C') {
+                printf("\033[1;31mPor favor, ingresa una opción válida (A, B o C)\033[0m\n");
+            }
         } while (respuesta != 'A' && respuesta != 'B' && respuesta != 'C');
         
         send(sock, &respuesta, 1, 0);
@@ -155,18 +169,25 @@ void realizar_examen_academico(int sock) {
     
     printf("\n\033[1;32m=== EXAMEN DE INGLÉS ===\033[0m\n\n");
     for (int i = 0; i < num_ingles; i++) {
-        recv(sock, &pregunta, sizeof(Pregunta), 0);
+        memset(&pregunta, 0, sizeof(Pregunta));
+        if (recv(sock, &pregunta, sizeof(Pregunta), 0) <= 0) {
+            printf("\033[1;31mError al recibir la pregunta\033[0m\n");
+            return;
+        }
         
-        printf("\nPregunta %d:\n%s\n", i + 1, pregunta.pregunta);
-        printf("A) %s\n", pregunta.opciones[0]);
-        printf("B) %s\n", pregunta.opciones[1]);
-        printf("C) %s\n", pregunta.opciones[2]);
+        printf("\n\033[1;36mPregunta %d:\033[0m\n%s\n", i + 1, pregunta.pregunta);
+        printf("\033[1;33mA)\033[0m %s\n", pregunta.opciones[0]);
+        printf("\033[1;33mB)\033[0m %s\n", pregunta.opciones[1]);
+        printf("\033[1;33mC)\033[0m %s\n", pregunta.opciones[2]);
         
         char respuesta;
         do {
-            printf("Tu respuesta (A/B/C): ");
+            printf("\033[1;32mTu respuesta (A/B/C):\033[0m ");
             scanf(" %c", &respuesta);
             respuesta = toupper(respuesta);
+            if (respuesta != 'A' && respuesta != 'B' && respuesta != 'C') {
+                printf("\033[1;31mPor favor, ingresa una opción válida (A, B o C)\033[0m\n");
+            }
         } while (respuesta != 'A' && respuesta != 'B' && respuesta != 'C');
         
         send(sock, &respuesta, 1, 0);
