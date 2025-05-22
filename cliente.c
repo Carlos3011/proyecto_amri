@@ -382,6 +382,7 @@ int main() {
         limpiar_pantalla();
         mostrar_menu();
         scanf("%d", &opcion);
+        while (getchar() != '\n'); // Limpiar el buffer de entrada
         
         switch(opcion) {
             case 1: {
@@ -413,6 +414,7 @@ int main() {
                 scanf(" %[^\n]", matricula);
                 send(sock, matricula, sizeof(matricula), 0);
                 realizar_examen_academico(sock);
+               
                 break;
             }
             case 4: {

@@ -384,6 +384,7 @@ void *manejar_cliente(void *socket_desc) {
                 // Recibir matrícula
                 recv(sock, matricula, sizeof(matricula), 0);
                 enviar_examen_academico(sock, matricula);
+                
                 break;
             }
             case 4: {
