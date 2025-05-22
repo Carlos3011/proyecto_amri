@@ -11,25 +11,6 @@
 #define MAX_BUFFER 1024
 #define MAX_PREGUNTAS 10
 
-// Estructura para resultados del examen académico
-typedef struct {
-    int matematicas;
-    int espanol;
-    int ingles;
-    float promedio;
-} ResultadoAcademico;
-
-// Estructura para resultados del test psicométrico
-typedef struct {
-    int correctas;
-    int total;
-    float porcentaje;
-    char fecha[20];
-} ResultadoPsicometrico;
-
-// Prototipos de funciones
-void guardar_kardex(const char* matricula, ResultadoAcademico* resultado_academico, ResultadoPsicometrico* resultado_psicometrico);
-
 // Estructura para almacenar datos del usuario
 typedef struct {
     char nombre[50];
@@ -48,7 +29,6 @@ typedef struct {
     char respuesta;
 } Pregunta;
 
-// Estructura para resultados del examen académico
 typedef struct {
     int matematicas;
     int espanol;
@@ -56,7 +36,6 @@ typedef struct {
     float promedio;
 } ResultadoAcademico;
 
-// Estructura para resultados del test psicométrico
 typedef struct {
     int correctas;
     int total;
@@ -64,12 +43,17 @@ typedef struct {
     char fecha[20];
 } ResultadoPsicometrico;
 
+
+
 // Estructura para el kardex completo
 typedef struct {
     char matricula[20];
     ResultadoAcademico resultados_academicos;
     ResultadoPsicometrico resultados_psicometricos;
 } Kardex;
+
+// Prototipos de funciones
+void guardar_kardex(const char* matricula, ResultadoAcademico* resultado_academico, ResultadoPsicometrico* resultado_psicometrico);
 
 // Función para cargar preguntas desde archivo
 int cargar_preguntas(const char* archivo, Pregunta* preguntas) {
